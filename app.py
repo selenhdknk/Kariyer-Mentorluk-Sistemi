@@ -8,25 +8,24 @@ st.title("🎓 Kariyer Mentorluk ve CV Takip Sistemi")
 st.subheader("Yönetim Paneli")
 st.markdown("---")
 
-# Yan Menü Navigasyonu (Tüm sekmeler aktif edildi)
+
 menu = st.sidebar.selectbox(
     "Menü Seçimi",
     ["Öğrenci Listesi", "Yeni Öğrenci Ekle", "Mentor Listesi", "Randevu Talepleri", "Planlanan Görüşmeler"]
 )
 
-# 1. ÖĞRENCİ LİSTELEME
-# app.py içindeki "Öğrenci Listesi" bölümünü bul ve bu şekilde güncelle:
+
 if menu == "Öğrenci Listesi":
     st.header("📋 Kayıtlı Öğrenciler")
     
     ogrenciler = bll.tum_ogrencileri_getir()
     
     if ogrenciler:
-        # 1. Veriyi Pandas DataFrame yapısına dönüştürüyoruz
+        
         import pandas as pd
         df = pd.DataFrame(ogrenciler)
         
-        # 2. Teknik kolon isimlerini arayüzde görünecek şık isimlerle eşliyoruz
+       
         df = df.rename(columns={
             'ogrenci_id': 'Öğrenci ID',
             'ad': 'Ad',
@@ -67,7 +66,7 @@ elif menu == "Yeni Öğrenci Ekle":
             else:
                 st.error("❌ Kayıt işlemi başarısız.")
 
-# 3. MENTOR LİSTELEME
+
 elif menu == "Mentor Listesi":
     st.header("👨‍🏫 Mentor Kadromuz")
     mentorlar = bll.tum_mentorleri_getir()
@@ -78,21 +77,44 @@ elif menu == "Mentor Listesi":
 
 # 4. RANDEVU TALEPLERİ VE ONAYLAMA SÜRECİ
 elif menu == "Randevu Talepleri":
-    st.header("📨 Öğrencilerden Gelen Görüşme Talepleri")
+    st.header("📨 Randevu Talepleri Yönetimi")
+    
+    # --- YENİ TALEP OLUŞTURMA FORMU (ÖĞRENCİ İÇİN) ---
+    st.markdown("### ➕ Yeni Randevu Talebinde Bulun")
+    with st.form("yeni_talep_formu", clear_on_submit=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            o_id = st.number_input("Öğrenci ID Numarası:", min_value=1, step=1)
+            m_id = st.number_input("Mentor ID Numarası:", min_value=1, step=1)
+        with col2:
+            talep_aciklamasi = st.text_area("Görüşme Amacı / Açıklama:")
+            
+        talep_buton = st.form_submit_button("Randevu Talebini Gönder")
+        if talep_buton:
+            sonuc = bll.yeni_randevu_talebi_olustur(talep_aciklamasi, o_id, m_id)
+            if sonuc:
+                st.success("✔️ Randevu talebiniz başarıyla oluşturuldu ve 'Beklemede' olarak havuza düştü!")
+                st.rerun()
+            else:
+                st.error("❌ Talep oluşturulamadı. Lütfen bilgileri kontrol edin.")
+                
+    st.markdown("---")
+    
+    # --- MEVCUT TALEPLERİ LİSTELEME VE ONAYLAMA SÜRECİ ---
     
     
     talepler = bll.tum_randevulari_getir()
     if talepler:
         st.dataframe(talepler, use_container_width=True)
         
-        st.markdown("### ⚙️ Talep Yönetim Aksiyonu")
+        st.markdown("### ⚙️ Talep Yönetim Aksiyonu (Mentor/Admin Paneli)")
         col1, col2 = st.columns(2)
         with col1:
             talep_id = st.number_input("İşlem Yapılacak Talep ID:", min_value=1, step=1)
         with col2:
             islem = st.selectbox("Kararınız:", ["Onaylandi", "Reddedildi"])
             
-        if st.button("Kararı Uygula"):
+        if st.button("Kararı Uygula (Sp_RandevuTalebiGuncelle Tetikle)"):
             sonuc = bll.randevu_durumu_degistir(talep_id, islem)
             if sonuc:
                 st.success(f"✔️ {talep_id} numaralı talep durumu '{islem}' olarak güncellendi!")
@@ -102,7 +124,6 @@ elif menu == "Randevu Talepleri":
     else:
         st.info("Bekleyen randevu talebi bulunmuyor.")
 
-# 5. PLANLANAN GÖRÜŞMELER (TRIGGER TAKİP ALANI)
 elif menu == "Planlanan Görüşmeler":
     st.header("📅 Takvim ve Kesinleşen Online Görüşmeler")
    

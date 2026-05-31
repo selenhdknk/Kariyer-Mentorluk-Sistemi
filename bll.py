@@ -5,23 +5,18 @@ class BusinessLogicLayer:
         self.dal = DataAccessLayer()
 
     def tum_ogrencileri_getir(self):
-        # İş katmanı burada gerekirse veriyi filtreleyebilir veya sıralayabilir
         return self.dal.ogrenci_listele_dal()
 
     def yeni_ogrenci_kaydet(self, ad, soyad, email, telefon, universite, bolum, sinif):
-        # İş Kuralı Kontrolü: Boş alan var mı?
         if not ad or not soyad or not email or not universite or not bolum:
             print("BLL Uyarısı: Zorunlu alanlar boş bırakılamaz!")
             return False
         
-        # İş Kuralı Kontrolü: Sınıf bilgisi mantıklı mı?
         if sinif < 1 or sinif > 4:
             print("BLL Uyarısı: Sınıf bilgisi 1 ile 4 arasında olmalıdır!")
             return False
 
-        # Kurallar geçildiyse veritabanı katmanına gönder
         return self.dal.ogrenci_ekle_dal(ad, soyad, email, telefon, universite, bolum, sinif)
-    # bll.py dosyasının EN ALTINA ekle:
 
     def tum_mentorleri_getir(self):
         return self.dal.mentor_listele_dal()
@@ -36,3 +31,9 @@ class BusinessLogicLayer:
 
     def tum_gorusmeleri_getir(self):
         return self.dal.gorusme_listele_dal()
+    def yeni_randevu_talebi_olustur(self, aciklama, ogrenci_id, mentor_id):
+        # İş Kuralı: Açıklama boş mu veya ID'ler girilmiş mi kontrolü
+        if not aciklama or not ogrenci_id or not mentor_id:
+            print("BLL Uyarısı: Randevu açıklaması ve geçerli ID'ler zorunludur!")
+            return False
+        return self.dal.randevu_talebi_ekle_dal(aciklama, ogrenci_id, mentor_id)

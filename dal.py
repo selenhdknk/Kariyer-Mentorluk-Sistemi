@@ -3,26 +3,22 @@ from mysql.connector import Error
 
 class DataAccessLayer:
     def __init__(self):
-        # Veritabanı bağlantı bilgileri
         self.config = {
             'host': 'localhost',
             'database': 'KariyerMentorlukDB',
-            'user': 'root',       # MySQL kullanıcı adın
-            'password': 'cemay123*' # MySQL şifren
+            'user': 'root',       
+            'password': 'cemay123*'
         }
 
     def _get_connection(self):
         return mysql.connector.connect(**self.config)
 
-    # 1. ÖĞRENCİ LİSTELEME PROSEDÜRÜ (Select)
     def ogrenci_listele_dal(self):
         baglanti = self._get_connection()
         cursor = baglanti.cursor(dictionary=True)
         ogrenciler = []
         try:
-            # Doğrudan SELECT yazmak yasak! Prosedürü çağırıyoruz.
             cursor.callproc("Sp_OgrenciListele")
-            # callproc sonrasında dönen sonuç kümelerini (stored_results) alıyoruz
             for result in cursor.stored_results():
                 ogrenciler = result.fetchall()
         except Error as e:
@@ -32,20 +28,18 @@ class DataAccessLayer:
             baglanti.close()
         return ogrenciler
 
-    # 2. ÖĞRENCİ EKLEME PROSEDÜRÜ (Insert)
     def ogrenci_ekle_dal(self, ad, soyad, email, telefon, universite, bolum, sinif):
         baglanti = self._get_connection()
         cursor = baglanti.cursor()
         basarili_mi = False
         try:
-            # Prosedür parametrelerini demet (tuple) olarak gönderiyoruz
             parametreler = (ad, soyad, email, telefon, universite, bolum, sinif)
             cursor.callproc("Sp_OgrenciEkle", parametreler)
-            baglanti.commit() # Değişiklikleri kaydet
+            baglanti.commit() 
             basarili_mi = True
         except Error as e:
             print(f"DAL Hatası: {e}")
-            baglanti.rollback() # Hata varsa geri al
+            baglanti.rollback() 
         finally:
             cursor.close()
             baglanti.close()
@@ -117,3 +111,20 @@ class DataAccessLayer:
             cursor.close()
             baglanti.close()
         return gorusmeler
+    
+    def randevu_talebi_ekle_dal(self, aciklama, ogrenci_id, mentor_id):
+        baglanti = self._get_connection()
+        cursor = baglanti.cursor()
+        basarili_mi = False
+        try:
+            parametreler = (aciklama, ogrenci_id, mentor_id)
+            cursor.callproc("Sp_RandevuTalebiEkle", parametreler)
+            baglanti.commit()
+            basarili_mi = True
+        except Error as e:
+            print(f"DAL Hatası: {e}")
+            baglanti.rollback()
+        finally:
+            cursor.close()
+            baglanti.close()
+        return basarili_mi
